@@ -19,7 +19,9 @@ class Githubly():
         # print url
         response = requests.get(url, auth=HTTPBasicAuth(self.username, self.password), headers=self.headers)
         if need_links:
-            return json.loads((response.text).encode('utf-8')), response.links["next"], response.links["last"]
+            if "next" in response.links and "last" in response.links:
+                return json.loads((response.text).encode('utf-8')), response.links["next"], response.links["last"]
+            return json.loads((response.text).encode('utf-8')), None, None
         return json.loads((response.text).encode('utf-8'))
 
     def _post_to_api(self, url, data):
@@ -67,19 +69,20 @@ class Githubly():
         for issue in issues_list:
             print str(issue["number"]) + "-" + issue["title"]
 
-        print "Next - %s" % next_url["url"]
-        print "Last - %s" % last_url["url"]
+        if next_url and last_url:
+            print "Next - %s" % next_url["url"]
+            print "Last - %s" % last_url["url"]
 
-        new_choice = raw_input("Please enter next/last to navigate to next/last page. Enter exit to quit: ")
-        if new_choice not in ["Exit", "Quit", "quit", "exit", "q"]:
-            if new_choice in ["Next", "next", "NEXT"]:
-                new_url = next_url["url"]
-            elif new_choice in ["Last", "last", "LAST"]:
-                new_url = last_url["url"]
-            else:
-                print "Bad choice :("
-                return True
-            self._print_issues(user=user, repo=repo, url=new_url)
+            new_choice = raw_input("Please enter next/last to navigate to next/last page. Enter exit to quit: ")
+            if new_choice not in ["Exit", "Quit", "quit", "exit", "q"]:
+                if new_choice in ["Next", "next", "NEXT"]:
+                    new_url = next_url["url"]
+                elif new_choice in ["Last", "last", "LAST"]:
+                    new_url = last_url["url"]
+                else:
+                    print "Bad choice :("
+                    return True
+                self._print_issues(user=user, repo=repo, url=new_url)
 
         return True
 
