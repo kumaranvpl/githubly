@@ -17,7 +17,7 @@ class Githubly():
 
     def _get_response_from_api(self, url):
         print url
-        response = requests.get(url, auth=HTTPBasicAuth(self.username, self.password))
+        response = requests.get(url, auth=HTTPBasicAuth(self.username, self.password), headers=self.headers)
         return json.loads((response.text).encode('utf-8'))
 
     def _post_to_api(self, url, data):
@@ -51,11 +51,20 @@ class Githubly():
 
     def get_repos(self, user):
         url = self.GITHUB_API + "users/" + user + "/repos?visibility=all&type=all"
-        repos_list = self._get_response_from_api(url, user)
+        repos_list = self._get_response_from_api(url)
         return repos_list
 
+    def print_issues(self, user, repo):
+        url = self.GITHUB_API + "repos/" + user + "/" + repo + "/issues"
+        issues_list = self._get_response_from_api(url)
+        if not issues_list:
+            return False
+        for issue in issues_list:
+            print str(issue["number"]) + "-" + issue["title"]
+        return True
+
     def _print_repos(self, user):
-        need_repos = raw_input("Do you want to see all your repos?(y/n) ")
+        need_repos = raw_input("Do you want to see all repos?(y/n) ")
         if need_repos in ["yes", "Yes", "y", "Y", "YES"]:
             repos_list = self.get_repos(user)
             for repo in repos_list:
@@ -74,13 +83,36 @@ class Githubly():
         title = raw_input("Please enter title for new issue: ")
         body = raw_input("Please enter body for new issue: ")
         data = {"title": title, "body": body}
-        url = self.GITHUB_API + "repos"+"/"+user+"/"+repo+"/issues"
+        url = self.GITHUB_API + "repos" + "/" + user + "/" + repo + "/issues"
         try:
             response = self._post_to_api(url=url, data=data)
             print "Issue created successfully"
             print "Issue id - %s" % response["id"]
             print "Issue number - %s" % response["number"]
             print "Issue created_at - %s" % response["created_at"]
+        except Exception as e:
+            print "Error occured - %s" % str(e)
+
+    def close_issue(self):
+        user = self.need_another_user()
+        self._print_repos(user)
+        repo = raw_input("Please enter a repo name: ")
+        issues_present = self.print_issues(user, repo)
+        if not issues_present:
+            print "No issues found. Please open one first"
+            return
+        issue_num = raw_input("Please enter issue's number to close: ")
+        data = {"state": "closed"}
+        url = self.GITHUB_API + "repos" + "/" + user + "/" + repo + "/issues/" + issue_num
+        try:
+            response = self._post_to_api(url=url, data=data)
+            print response
+            print "Issue closed successfully"
+            print "Issue id - %s" % response["id"]
+            print "Issue number - %s" % response["number"]
+            print "Issue state - %s" % response["state"]
+            print "Issue created_at - %s" % response["created_at"]
+            print "Issue closed_at - %s" % response["closed_at"]
         except Exception as e:
             print "Error occured - %s" % str(e)
 
@@ -115,7 +147,7 @@ if __name__ == "__main__":
         elif user_input == "3":
             githubly.open_issue()
         elif user_input == "4":
-            pass
+            githubly.close_issue()
         elif user_input == "5":
             pass
         elif user_input in ["Exit", "Quit", "quit", "exit", "q"]:
