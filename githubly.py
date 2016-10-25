@@ -116,6 +116,29 @@ class Githubly():
         except Exception as e:
             print "Error occured - %s" % str(e)
 
+    def add_comment(self):
+        user = self.need_another_user()
+        self._print_repos(user)
+        repo = raw_input("Please enter a repo name: ")
+        issues_present = self.print_issues(user, repo)
+        if not issues_present:
+            print "No issues found. Please open one first"
+            return
+        issue_num = raw_input("Please enter issue's number to add comment: ")
+        comment = raw_input("Please enter your comment: ")
+        data = {"body": comment}
+        url = self.GITHUB_API + "repos" + "/" + user + "/" + repo + "/issues/" + issue_num + "/comments"
+        try:
+            response = self._post_to_api(url=url, data=data)
+            print response
+            print "Comment added successfully"
+            print "Comment id - %s" % response["id"]
+            print "Comment message - %s" % response["body"]
+            print "Comment html_url - %s" % response["html_url"]
+            print "Comment created_at - %s" % response["created_at"]
+        except Exception as e:
+            print "Error occured - %s" % str(e)
+
 
 
 if __name__ == "__main__":
@@ -149,7 +172,7 @@ if __name__ == "__main__":
         elif user_input == "4":
             githubly.close_issue()
         elif user_input == "5":
-            pass
+            githubly.add_comment()
         elif user_input in ["Exit", "Quit", "quit", "exit", "q"]:
             print "Bye Bye Bye!!!"
             sys.exit()
