@@ -12,7 +12,7 @@ class Githubly():
         self.username = username
         self.password = password
         self.GITHUB_API = "https://api.github.com/"
-        self.auth_token = self.get_auth_token()
+        self.auth_token = self._get_auth_token()
         self.headers = {'Authorization': 'token %s' % self.auth_token}
 
     def _get_response_from_api(self, url, need_links=None):
@@ -27,7 +27,7 @@ class Githubly():
         response = requests.post(url, data=json.dumps(data), auth=HTTPBasicAuth(self.username, self.password), headers=self.headers)
         return json.loads((response.text).encode('utf-8'))
 
-    def get_auth_token(self):
+    def _get_auth_token(self):
         with open('tokens.csv', 'rb') as f:
             reader = csv.reader(f)
             dict_from_csv = dict(reader)
@@ -45,18 +45,18 @@ class Githubly():
 
         return resp_dict["token"]
 
-    def need_another_user(self):
+    def _need_another_user(self):
         user = raw_input("Please enter username of another user to list issues, else enter no: ")
         if user in ["no", "n", "N", "NO", "No"]:
             user = self.username
         return user
 
-    def get_repos(self, user):
+    def _get_repos(self, user):
         url = self.GITHUB_API + "users/" + user + "/repos?visibility=all&type=all"
         repos_list = self._get_response_from_api(url)
         return repos_list
 
-    def print_issues(self, user, repo, url=None):
+    def _print_issues(self, user, repo, url=None):
         if not url:
             url = self.GITHUB_API + "repos/" + user + "/" + repo + "/issues"
         issues_list, next_url, last_url = self._get_response_from_api(url, need_links=True)
@@ -79,29 +79,28 @@ class Githubly():
             else:
                 print "Bad choice :("
                 return True
-            self.print_issues(user=user, repo=repo, url=new_url)
+            self._print_issues(user=user, repo=repo, url=new_url)
 
         return True
 
     def _print_repos(self, user):
         need_repos = raw_input("Do you want to see all repos?(y/n) ")
         if need_repos in ["yes", "Yes", "y", "Y", "YES"]:
-            repos_list = self.get_repos(user)
+            repos_list = self._get_repos(user)
             for repo in repos_list:
                 print repo["name"]
 
     def list_issues(self):
-        user = self.need_another_user()
+        user = self._need_another_user()
         self._print_repos(user)
         repo = raw_input("Please enter a repo name: ")
-        issues_present = self.print_issues(user, repo)
-
+        issues_present = self._print_issues(user, repo)
 
     def issue_in_detail(self):
-        user = self.need_another_user()
+        user = self._need_another_user()
         self._print_repos(user)
         repo = raw_input("Please enter a repo name: ")
-        issues_present = self.print_issues(user, repo)
+        issues_present = self._print_issues(user, repo)
         if not issues_present: return
         issue_num = raw_input("Please enter issue's number to check its details: ")
         url = self.GITHUB_API + "repos" + "/" + user + "/" + repo + "/issues/" + issue_num
@@ -124,7 +123,7 @@ class Githubly():
             print "Error occured - %s" % str(e)
 
     def open_issue(self):
-        user = self.need_another_user()
+        user = self._need_another_user()
         self._print_repos(user)
         repo = raw_input("Please enter a repo name: ")
         title = raw_input("Please enter title for new issue: ")
@@ -141,10 +140,10 @@ class Githubly():
             print "Error occured - %s" % str(e)
 
     def close_issue(self):
-        user = self.need_another_user()
+        user = self._need_another_user()
         self._print_repos(user)
         repo = raw_input("Please enter a repo name: ")
-        issues_present = self.print_issues(user, repo)
+        issues_present = self._print_issues(user, repo)
         if not issues_present: return
         issue_num = raw_input("Please enter issue's number to close: ")
         data = {"state": "closed"}
@@ -162,10 +161,10 @@ class Githubly():
             print "Error occured - %s" % str(e)
 
     def add_comment(self):
-        user = self.need_another_user()
+        user = self._need_another_user()
         self._print_repos(user)
         repo = raw_input("Please enter a repo name: ")
-        issues_present = self.print_issues(user, repo)
+        issues_present = self._print_issues(user, repo)
         if not issues_present: return
         issue_num = raw_input("Please enter issue's number to add comment: ")
         comment = raw_input("Please enter your comment: ")
