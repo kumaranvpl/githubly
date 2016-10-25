@@ -15,9 +15,11 @@ class Githubly():
         self.auth_token = self.get_auth_token()
         self.headers = {'Authorization': 'token %s' % self.auth_token}
 
-    def _get_response_from_api(self, url):
+    def _get_response_from_api(self, url, need_links=None):
         print url
         response = requests.get(url, auth=HTTPBasicAuth(self.username, self.password), headers=self.headers)
+        if need_links:
+            return json.loads((response.text).encode('utf-8')), response.links["next"], response.links["last"]
         return json.loads((response.text).encode('utf-8'))
 
     def _post_to_api(self, url, data):
@@ -54,13 +56,31 @@ class Githubly():
         repos_list = self._get_response_from_api(url)
         return repos_list
 
-    def print_issues(self, user, repo):
-        url = self.GITHUB_API + "repos/" + user + "/" + repo + "/issues"
-        issues_list = self._get_response_from_api(url)
+    def print_issues(self, user, repo, url=None):
+        if not url:
+            url = self.GITHUB_API + "repos/" + user + "/" + repo + "/issues"
+        issues_list, next_url, last_url = self._get_response_from_api(url, need_links=True)
+
         if not issues_list:
+            print "No issues found. Please open one first"
             return False
         for issue in issues_list:
             print str(issue["number"]) + "-" + issue["title"]
+
+        print "Next - %s" % next_url["url"]
+        print "Last - %s" % last_url["url"]
+
+        new_choice = raw_input("Please enter next/last to navigate to next/last page. Enter exit to quit: ")
+        if new_choice not in ["Exit", "Quit", "quit", "exit", "q"]:
+            if new_choice in ["Next", "next", "NEXT"]:
+                new_url = next_url["url"]
+            elif new_choice in ["Last", "last", "LAST"]:
+                new_url = last_url["url"]
+            else:
+                print "Bad choice :("
+                return True
+            self.print_issues(user=user, repo=repo, url=new_url)
+
         return True
 
     def _print_repos(self, user):
@@ -71,10 +91,37 @@ class Githubly():
                 print repo["name"]
 
     def list_issues(self):
-        url_suffix = "/issues"
         user = self.need_another_user()
         self._print_repos(user)
         repo = raw_input("Please enter a repo name: ")
+        issues_present = self.print_issues(user, repo)
+
+
+    def issue_in_detail(self):
+        user = self.need_another_user()
+        self._print_repos(user)
+        repo = raw_input("Please enter a repo name: ")
+        issues_present = self.print_issues(user, repo)
+        if not issues_present: return
+        issue_num = raw_input("Please enter issue's number to check its details: ")
+        url = self.GITHUB_API + "repos" + "/" + user + "/" + repo + "/issues/" + issue_num
+        try:
+            response = self._post_to_api(url=url, data={})
+            print response
+            print "Issue details:"
+            print "Issue id - %s" % response["id"]
+            print "Issue number - %s" % response["number"]
+            print "Issue title - %s" % response["title"]
+            print "Issue body - %s" % response["body"]
+            print "Issue state - %s" % response["state"]
+            print "Issue url - %s" % response["url"]
+            print "Issue repository_url - %s" % response["repository_url"]
+            print "Issue html_url - %s" % response["html_url"]
+            print "Issue comments - %s" % response["comments"]
+            print "Issue created_at - %s" % response["created_at"]
+            print "Issue closed_at - %s" % response["closed_at"]
+        except Exception as e:
+            print "Error occured - %s" % str(e)
 
     def open_issue(self):
         user = self.need_another_user()
@@ -98,9 +145,7 @@ class Githubly():
         self._print_repos(user)
         repo = raw_input("Please enter a repo name: ")
         issues_present = self.print_issues(user, repo)
-        if not issues_present:
-            print "No issues found. Please open one first"
-            return
+        if not issues_present: return
         issue_num = raw_input("Please enter issue's number to close: ")
         data = {"state": "closed"}
         url = self.GITHUB_API + "repos" + "/" + user + "/" + repo + "/issues/" + issue_num
@@ -121,9 +166,7 @@ class Githubly():
         self._print_repos(user)
         repo = raw_input("Please enter a repo name: ")
         issues_present = self.print_issues(user, repo)
-        if not issues_present:
-            print "No issues found. Please open one first"
-            return
+        if not issues_present: return
         issue_num = raw_input("Please enter issue's number to add comment: ")
         comment = raw_input("Please enter your comment: ")
         data = {"body": comment}
@@ -157,7 +200,7 @@ if __name__ == "__main__":
     while True:
         print "Menu"
         print "1. List issues"
-        print "2. Detailed issue"
+        print "2. Issue in detail"
         print "3. Open new issue"
         print "4. Close issue"
         print "5. Add comment to an issue"
@@ -166,7 +209,7 @@ if __name__ == "__main__":
         if user_input == "1":
             githubly.list_issues()
         elif user_input == "2":
-            pass
+            githubly.issue_in_detail()
         elif user_input == "3":
             githubly.open_issue()
         elif user_input == "4":
