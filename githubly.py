@@ -189,8 +189,8 @@ if __name__ == "__main__":
     print "Please enter your github username, password below. This is needed to avoid github's rate limitation. "
     print "Don't worry I am not saving your credentials ;)"
     username = raw_input("Username: ")
-    #password = getpass.getpass(prompt='Password: ', stream=None)
-    password = raw_input("Password: ")
+    password = getpass.getpass(prompt='Password: ', stream=None)
+    #password = raw_input("Password: ")
     try:
         githubly = Githubly(username=username, password=password)
     except Exception as e:
