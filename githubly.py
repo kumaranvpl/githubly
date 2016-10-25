@@ -16,14 +16,14 @@ class Githubly():
         self.headers = {'Authorization': 'token %s' % self.auth_token}
 
     def _get_response_from_api(self, url, need_links=None):
-        print url
+        # print url
         response = requests.get(url, auth=HTTPBasicAuth(self.username, self.password), headers=self.headers)
         if need_links:
             return json.loads((response.text).encode('utf-8')), response.links["next"], response.links["last"]
         return json.loads((response.text).encode('utf-8'))
 
     def _post_to_api(self, url, data):
-        print url, data
+        # print url, data
         response = requests.post(url, data=json.dumps(data), auth=HTTPBasicAuth(self.username, self.password), headers=self.headers)
         return json.loads((response.text).encode('utf-8'))
 
