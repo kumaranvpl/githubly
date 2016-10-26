@@ -130,6 +130,7 @@ class Githubly:
             print "Issue closed_at - %s" % response["closed_at"]
         except Exception as e:
             print "Error occured - %s" % str(e)
+            raise GithublyException(e)
 
     def open_issue(self):
         title = raw_input("Please enter title for new issue: ")
@@ -144,6 +145,7 @@ class Githubly:
             print "Issue created_at - %s" % response["created_at"]
         except Exception as e:
             print "Error occured - %s" % str(e)
+            raise GithublyException(e)
 
     def close_issue(self):
         issues_present = self._print_issues(self.user, self.repo)
@@ -162,6 +164,7 @@ class Githubly:
             print "Issue closed_at - %s" % response["closed_at"]
         except Exception as e:
             print "Error occured - %s" % str(e)
+            raise GithublyException(e)
 
     def add_comment(self):
         issues_present = self._print_issues(self.user, self.repo)
@@ -180,6 +183,7 @@ class Githubly:
             print "Comment created_at - %s" % response["created_at"]
         except Exception as e:
             print "Error occured - %s" % str(e)
+            raise GithublyException(e)
 
 
 if __name__ == "__main__":
@@ -188,7 +192,6 @@ if __name__ == "__main__":
     print "Don't worry I am not saving your credentials ;)"
     username = raw_input("Username: ")
     password = getpass.getpass(prompt='Password: ', stream=None)
-    #password = raw_input("Password: ")
     try:
         githubly = Githubly(username=username, password=password)
     except Exception as e:
