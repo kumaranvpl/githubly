@@ -7,7 +7,15 @@ import sys
 from requests.auth import HTTPBasicAuth
 
 
-class Githubly():
+class GithublyException(Exception):
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)
+
+
+class Githubly:
     def __init__(self, username, password):
         self.username = username
         self.password = password
@@ -186,7 +194,6 @@ class Githubly():
             print "Error occured - %s" % str(e)
 
 
-
 if __name__ == "__main__":
     print "Githublyyyyyyyyyyyyyyyyyyyyy"
     print "Please enter your github username, password below. This is needed to avoid github's rate limitation. "
@@ -199,6 +206,7 @@ if __name__ == "__main__":
     except Exception as e:
         print "Something broke :("
         print "Exception for geeks - %s" % str(e)
+        raise GithublyException(e)
 
     while True:
         print "Menu"
