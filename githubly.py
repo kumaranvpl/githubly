@@ -38,8 +38,9 @@ class Githubly():
             return dict_from_csv[self.username]
 
         url = self.GITHUB_API + "authorizations"
-        data = {"scopes": ["repo"], "note": "Authorization token for Githubly"}
-        resp_dict = self._post_to_api(url, data)
+        data = {"scopes": ["repo"], "note": "Auth token for Githubly"}
+        response = requests.post(url, data=json.dumps(data), auth=HTTPBasicAuth(self.username, self.password))
+        resp_dict = json.loads((response.text).encode('utf-8'))
 
         with open('tokens.csv', 'a') as f:
             writer = csv.writer(f)
