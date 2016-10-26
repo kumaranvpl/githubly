@@ -22,6 +22,9 @@ class Githubly:
         self.GITHUB_API = "https://api.github.com/"
         self.auth_token = self._get_auth_token()
         self.headers = {'Authorization': 'token %s' % self.auth_token}
+        self.user = self._need_another_user()
+        self._print_repos(self.user)
+        self.repo = raw_input("Please enter a repo name: ")
 
     def _get_response_from_api(self, url, need_links=None):
         # print url
@@ -103,22 +106,16 @@ class Githubly:
                 print repo["name"]
 
     def list_issues(self):
-        user = self._need_another_user()
-        self._print_repos(user)
-        repo = raw_input("Please enter a repo name: ")
-        issues_present = self._print_issues(user, repo)
+        issues_present = self._print_issues(self.user, self.repo)
 
     def issue_in_detail(self):
-        user = self._need_another_user()
-        self._print_repos(user)
-        repo = raw_input("Please enter a repo name: ")
-        issues_present = self._print_issues(user, repo)
+        issues_present = self._print_issues(self.user, self.repo)
         if not issues_present: return
         issue_num = raw_input("Please enter issue's number to check its details: ")
-        url = self.GITHUB_API + "repos" + "/" + user + "/" + repo + "/issues/" + issue_num
+        url = self.GITHUB_API + "repos" + "/" + self.user + "/" + self.repo + "/issues/" + issue_num
         try:
             response = self._post_to_api(url=url, data={})
-            print response
+            #print response
             print "Issue details:"
             print "Issue id - %s" % response["id"]
             print "Issue number - %s" % response["number"]
@@ -135,13 +132,10 @@ class Githubly:
             print "Error occured - %s" % str(e)
 
     def open_issue(self):
-        user = self._need_another_user()
-        self._print_repos(user)
-        repo = raw_input("Please enter a repo name: ")
         title = raw_input("Please enter title for new issue: ")
         body = raw_input("Please enter body for new issue: ")
         data = {"title": title, "body": body}
-        url = self.GITHUB_API + "repos" + "/" + user + "/" + repo + "/issues"
+        url = self.GITHUB_API + "repos" + "/" + self.user + "/" + self.repo + "/issues"
         try:
             response = self._post_to_api(url=url, data=data)
             print "Issue created successfully"
@@ -152,14 +146,11 @@ class Githubly:
             print "Error occured - %s" % str(e)
 
     def close_issue(self):
-        user = self._need_another_user()
-        self._print_repos(user)
-        repo = raw_input("Please enter a repo name: ")
-        issues_present = self._print_issues(user, repo)
+        issues_present = self._print_issues(self.user, self.repo)
         if not issues_present: return
         issue_num = raw_input("Please enter issue's number to close: ")
         data = {"state": "closed"}
-        url = self.GITHUB_API + "repos" + "/" + user + "/" + repo + "/issues/" + issue_num
+        url = self.GITHUB_API + "repos" + "/" + self.user + "/" + self.repo + "/issues/" + issue_num
         try:
             response = self._post_to_api(url=url, data=data)
             print response
@@ -173,15 +164,12 @@ class Githubly:
             print "Error occured - %s" % str(e)
 
     def add_comment(self):
-        user = self._need_another_user()
-        self._print_repos(user)
-        repo = raw_input("Please enter a repo name: ")
-        issues_present = self._print_issues(user, repo)
+        issues_present = self._print_issues(self.user, self.repo)
         if not issues_present: return
         issue_num = raw_input("Please enter issue's number to add comment: ")
         comment = raw_input("Please enter your comment: ")
         data = {"body": comment}
-        url = self.GITHUB_API + "repos" + "/" + user + "/" + repo + "/issues/" + issue_num + "/comments"
+        url = self.GITHUB_API + "repos" + "/" + self.user + "/" + self.repo + "/issues/" + issue_num + "/comments"
         try:
             response = self._post_to_api(url=url, data=data)
             print response
